@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Passbook</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+    <div class="mobile-app">
+        
+        <div id="welcome-screen" class="welcome-overlay">
+            <div class="welcome-card">
+                <div class="welcome-icon"><i class="fa-solid fa-wallet"></i></div>
+                <h2>Digital Passbook</h2>
+                <p>Track your daily income and expenses.</p>
+                
+                <div class="login-options">
+                    <button class="login-btn demo-login-btn" onclick="startDemoMode()">
+                        <i class="fa-solid fa-user-astronaut"></i> Use Demo Account
+                        <span>(Data is temporary & private to browser)</span>
+                    </button>
+                    
+                    <div class="divider"><span>OR</span></div>
+                    
+                    <div id="admin-login-form" class="admin-form">
+                        <input type="email" id="admin-email" placeholder="Admin Email" autocomplete="off">
+                        <input type="password" id="admin-pass" placeholder="Admin Password" autocomplete="off">
+                        <button class="login-btn admin-login-btn" onclick="startAdminMode()">
+                            <i class="fa-solid fa-lock"></i> Login as Admin
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="main-app-content" style="display: none;">
+            
+            <div id="home-page">
+                <header class="header">
+                    <div>
+                        <h1>My Passbook</h1>
+                        <p id="welcome-text">Welcome back!</p>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                        <span id="sync-badge" class="demo-badge">Demo Mode</span>
+                        <div style="display: flex; gap: 8px;">
+                            <span class="action-badge bg-blue" onclick="openExportModal()" title="Export Statement"><i class="fa-solid fa-file-pdf"></i> PDF</span>
+                            <span class="action-badge bg-red" onclick="clearData()" title="Clear Data"><i class="fa-solid fa-trash"></i></span>
+                            <span class="action-badge" style="background:#f3f4f6; color:#4b5563; border: 1px solid #d1d5db;" onclick="logout()" title="Logout"><i class="fa-solid fa-arrow-right-from-bracket"></i></span>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="balance-card">
+                    <p>Total Balance</p>
+                    <h2 id="total-balance">₹ 0</h2>
+                    <div class="balance-details">
+                        <div>
+                            <p>Total Income</p>
+                            <h3 id="total-income">₹ 0</h3>
+                        </div>
+                        <div>
+                            <p>Total Spend</p>
+                            <h3 id="total-expense">₹ 0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="section-title">My Wallets</h3>
+                <div class="wallets-container" id="wallets-container"></div>
+
+                <div class="section-header mt-4" style="margin-bottom: 5px;">
+                    <h3 class="section-title" style="margin:0;">Recent Entries</h3>
+                </div>
+
+                <div class="action-bar" id="action-bar" style="display: none;">
+                    <div class="select-all-wrapper">
+                        <input type="checkbox" id="select-all-cb" class="custom-cb" onclick="toggleSelectAll()">
+                        <label for="select-all-cb">Select All</label>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="edit-btn" onclick="editSelectedEntry()"><i class="fa-solid fa-pen"></i> Edit</button>
+                        <button id="delete-btn" onclick="deleteSelectedEntries()"><i class="fa-solid fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+
+                <div class="transactions-list" id="transactions-list"></div>
+            </div>
+
+            <div id="add-page" style="display: none;">
+                <header class="header" style="margin-bottom: 20px;">
+                    <h1 id="form-title">New Entry</h1>
+                </header>
+
+                <form id="entry-form" class="add-form">
+                    <div class="form-group">
+                        <label>Type</label>
+                        <div class="type-toggle">
+                            <input type="radio" id="type-expense" name="type" value="expense" checked>
+                            <label for="type-expense" class="toggle-btn expense-btn">Expense</label>
+                            
+                            <input type="radio" id="type-income" name="type" value="income">
+                            <label for="type-income" class="toggle-btn income-btn">Income</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Amount (₹)</label>
+                        <input type="number" id="amount" placeholder="Enter amount" required min="1">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Wallet / Source</label>
+                        <div id="wallet-grid" class="category-grid"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Category</label>
+                        <div id="category-grid" class="category-grid"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" id="desc" placeholder="What was this for?" required>
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="submit-btn">Save Entry</button>
+                </form>
+            </div>
+
+            <nav class="bottom-nav">
+                <a href="#" class="nav-item active" id="nav-home">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Home</span>
+                </a>
+                <a href="#" class="nav-item" id="nav-add">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <span>Add Entry</span>
+                </a>
+            </nav>
+        </div>
+
+        <div id="custom-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-card">
+                <h3 id="modal-title">Add New</h3>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <input type="text" id="modal-input-name" placeholder="Enter Name (e.g. Gym)" autocomplete="off">
+                </div>
+                <div class="form-group" id="modal-emoji-group" style="margin-bottom: 10px;">
+                    <input type="text" id="modal-input-emoji" placeholder="Add an Emoji (e.g. 💪)" maxlength="2" autocomplete="off">
+                </div>
+                <div class="modal-actions">
+                    <button id="modal-cancel-btn" class="modal-btn cancel">Cancel</button>
+                    <button id="modal-save-btn" class="modal-btn save">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="export-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-card">
+                <h3 style="margin-bottom: 15px; text-align: center; font-size: 20px;">Export Statement</h3>
+                
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label>Timeframe</label>
+                    <select id="export-timeframe" onchange="toggleCustomDate()">
+                        <option value="1">Last 1 Month</option>
+                        <option value="3">Last 3 Months</option>
+                        <option value="6">Last 6 Months</option>
+                        <option value="12">Last 1 Year</option>
+                        <option value="all" selected>All Time</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+
+                <div id="custom-date-range" style="display: none; gap: 10px; margin-bottom: 15px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 11px; font-weight: bold; color: #6b7280;">Start Date</label>
+                        <input type="date" id="export-start-date" style="padding: 8px 10px; font-size: 13px;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 11px; font-weight: bold; color: #6b7280;">End Date</label>
+                        <input type="date" id="export-end-date" style="padding: 8px 10px; font-size: 13px;">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Transaction Type</label>
+                    <div class="type-toggle export-type-toggle">
+                        <input type="radio" id="exp-type-all" name="export-type" value="all" checked>
+                        <label for="exp-type-all" class="toggle-btn all-btn">Both</label>
+                        <input type="radio" id="exp-type-expense" name="export-type" value="expense">
+                        <label for="exp-type-expense" class="toggle-btn expense-btn">Expense</label>
+                        <input type="radio" id="exp-type-income" name="export-type" value="income">
+                        <label for="exp-type-income" class="toggle-btn income-btn">Income</label>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>Wallets <span style="font-weight:normal; font-size:11px; color:#9ca3af;">(Leave empty for ALL)</span></label>
+                    <div id="export-wallet-list" class="multi-select-grid"></div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 25px;">
+                    <label>Categories <span style="font-weight:normal; font-size:11px; color:#9ca3af;">(Leave empty for ALL)</span></label>
+                    <div id="export-category-list" class="multi-select-grid"></div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="modal-btn cancel" onclick="closeExportModal()">Cancel</button>
+                    <button class="modal-btn save" style="background: #10b981;" onclick="generatePDF()">Download PDF</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
