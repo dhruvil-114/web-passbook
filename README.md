@@ -5,6 +5,7 @@
 ### A Sleek, Mobile-First Personal Finance & Multi-Wallet Expense Tracker
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-GitHub_Pages-2ea44f?style=for-the-badge&logo=github)](https://dhruvil-114.github.io/web-passbook/)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](script.js)
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](index.html)
 [![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](style.css)
@@ -15,6 +16,7 @@
   <b>Digital Passbook</b> is a lightweight, mobile-first web application designed to track your daily income, expenses, and balances across multiple wallets seamlessly. Featuring instant sandbox <b>Demo Mode</b>, cloud sync via <b>Firebase</b>, and executive <b>PDF statement exports</b> with granular filters.
 </p>
 
+[🚀 Live Demo](https://dhruvil-114.github.io/web-passbook/) •
 [Key Features](#-key-features) •
 [Live Architecture](#-architecture--data-flow) •
 [Quick Start](#-quick-start) •
