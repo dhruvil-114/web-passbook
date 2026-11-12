@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "passbook-website"
+    "default": "your-project-id"
   }
 }
+
