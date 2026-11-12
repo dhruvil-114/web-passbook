@@ -281,7 +281,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 👨‍💻 Author
 
-**Dhruvil Patel**
+**Dhruvil Panchal**
 - GitHub: [@dhruvil-114](https://github.com/dhruvil-114)
 
 ---
